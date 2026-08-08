@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id       String    @id
+  slug     String    @unique
+  name     String
+  tagline  String    @default("")
+  icon     String    @default("")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id           String   @id
+  slug         String   @unique
+  name         String
+  tagline      String   @default("")
+  description  String   @default("")
+  priceUsd     Decimal
+  compareAtUsd Decimal?
+  images       String[]
+  specs        Json
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id])
+  stock        Int      @default(0)
+  featured     Boolean  @default(false)
+  rating       Float    @default(0)
+  reviews      Int      @default(0)
+  tags         String[]
+  createdAt    DateTime @default(now())
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+model Order {
+  id                  String   @id @default(uuid())
+  customer            Json
+  items               Json
+  totalUsd            Decimal
+  status              String   @default("placed")
+  paymentMethod       String   @default("stripe")
+  stripeSessionId     String?  @unique
+  stripePaymentIntent String?
+  createdAt           DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("orders")
+}
